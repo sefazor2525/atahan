@@ -25,12 +25,15 @@ IF %ERRORLEVEL% NEQ 0 (
 FOR /F "tokens=*" %%i IN ('git rev-parse --abbrev-ref HEAD') DO SET currentBranch=%%i
 echo Aktif dal: %currentBranch%
 
+:: Uzak repo adresini ayarla (gerçek repo adı: atahan)
+git remote set-url origin https://github.com/sefazor2525/atahan.git
+
 :: Push işlemi
 git push origin %currentBranch%
 IF %ERRORLEVEL% EQU 0 (
     echo Proje başarıyla GitHub'a gönderildi!
 ) ELSE (
-    echo HATA: GitHub'a gönderme başarısız oldu.
+    echo HATA: Github'a gönderme başarısız oldu.
 )
 
 :end
