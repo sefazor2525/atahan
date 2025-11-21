@@ -1,0 +1,300 @@
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList } from 'react-native';
+ 
+import { useState } from 'react';
+import NamazVakitleri from './components/NamazVakitleri';
+import HesapMakinesi from './components/HesapMakinesi';
+import HavaDurumu from './components/HavaDurumu';
+import YemekTarifleri from './components/YemekTarifleri';
+import DovizAltin from './components/DovizAltin';
+import Alarm from './components/Alarm';
+import Notlar from './components/Notlar';
+
+
+export default function App() {
+  const [showNamazVakitleri, setShowNamazVakitleri] = useState(false);
+  const [showHesapMakinesi, setShowHesapMakinesi] = useState(false);
+  const [showHavaDurumu, setShowHavaDurumu] = useState(false);
+  const [showYemekTarifleri, setShowYemekTarifleri] = useState(false);
+  const [showDovizAltin, setShowDovizAltin] = useState(false);
+  const [showAlarm, setShowAlarm] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [language, setLanguage] = useState<'tr' | 'en' | 'ar'>('tr');
+
+  const t = {
+    tr: {
+      welcome: "Kişisel Asistan'a Hoşgeldiniz!",
+      prayers: 'Namaz Vakitleri',
+      calc: 'Hesap Makinesi',
+      weather: 'Hava Durumu',
+      recipes: 'Yemek Tarifleri',
+      rates: 'Döviz ve Altın Kurları',
+      alarm: 'Alarm',
+      notes: 'Notlar',
+      settings: 'Ayarlar',
+      language: 'Dil',
+    },
+    en: {
+      welcome: 'Welcome to Personal Assistant!',
+      prayers: 'Prayer Times',
+      calc: 'Calculator',
+      weather: 'Weather',
+      recipes: 'Recipes',
+      rates: 'Currency & Gold',
+      alarm: 'Alarm',
+      notes: 'Notes',
+      settings: 'Settings',
+      language: 'Language',
+    },
+    ar: {
+      welcome: 'مرحبًا بك في المساعد الشخصي!',
+      prayers: 'مواعيد الصلاة',
+      calc: 'آلة حاسبة',
+      weather: 'الطقس',
+      recipes: 'وصفات الطعام',
+      rates: 'العملات والذهب',
+      alarm: 'منبّه',
+      notes: 'ملاحظات',
+      settings: 'الإعدادات',
+      language: 'اللغة',
+    },
+  };
+
+  const features = [
+    { key: 'prayers', label: t[language].prayers, color: '#4CAF50', onPress: () => setShowNamazVakitleri(true) },
+    { key: 'calc', label: t[language].calc, color: '#00BCD4', onPress: () => setShowHesapMakinesi(true) },
+    { key: 'weather', label: t[language].weather, color: '#8BC34A', onPress: () => setShowHavaDurumu(true) },
+    { key: 'recipes', label: t[language].recipes, color: '#03A9F4', onPress: () => setShowYemekTarifleri(true) },
+    { key: 'rates', label: t[language].rates, color: '#FF9800', onPress: () => setShowDovizAltin(true) },
+    { key: 'alarm', label: t[language].alarm, color: '#E91E63', onPress: () => setShowAlarm(true) },
+    { key: 'notes', label: t[language].notes, color: '#607D8B', onPress: () => setShowNotes(true) },
+  ];
+
+
+  return (
+    <View style={styles.container}>
+      {/* 🔹 Üstteki karşılama kutusu */}
+      <View style={styles.headerBox}>
+        <Text style={styles.headerText}>{t[language].welcome}</Text>
+      </View>
+
+      {/* 🔻 Butonlar grubu */}
+      <FlatList
+        data={features}
+        numColumns={3}
+        keyExtractor={(item) => item.key}
+        contentContainerStyle={styles.buttonGroup}
+        columnWrapperStyle={styles.buttonRow}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.baseButton, { backgroundColor: item.color }]}
+            onPress={item.onPress}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.buttonText}>{item.label}</Text>
+          </TouchableOpacity>
+        )}
+      />
+
+      <StatusBar style="auto" />
+
+      <View style={styles.settingsBar}>
+        <View style={styles.settingsHeaderRow}>
+          <Text style={styles.settingsHeaderText}>{t[language].settings}</Text>
+          <Text style={styles.languageLabel}>{t[language].language}</Text>
+        </View>
+        <View style={styles.langRow}>
+          <TouchableOpacity
+            style={[styles.langChip, language === 'tr' && styles.langChipActive]}
+            onPress={() => setLanguage('tr')}
+          >
+            <Text style={[styles.langText, language === 'tr' && styles.langTextActive]}>TR</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.langChip, language === 'en' && styles.langChipActive]}
+            onPress={() => setLanguage('en')}
+          >
+            <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.langChip, language === 'ar' && styles.langChipActive]}
+            onPress={() => setLanguage('ar')}
+          >
+            <Text style={[styles.langText, language === 'ar' && styles.langTextActive]}>AR</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Modals */}
+      <Modal
+        visible={showNamazVakitleri}
+        animationType="slide"
+        onRequestClose={() => setShowNamazVakitleri(false)}
+      >
+        <NamazVakitleri language={language} title={t[language].prayers} onClose={() => setShowNamazVakitleri(false)} />
+      </Modal>
+
+      <Modal
+        visible={showHesapMakinesi}
+        animationType="slide"
+        onRequestClose={() => setShowHesapMakinesi(false)}
+      >
+        <HesapMakinesi title={t[language].calc} onClose={() => setShowHesapMakinesi(false)} />
+      </Modal>
+
+      <Modal
+        visible={showHavaDurumu}
+        animationType="slide"
+        onRequestClose={() => setShowHavaDurumu(false)}
+      >
+        <HavaDurumu title={t[language].weather} onClose={() => setShowHavaDurumu(false)} />
+      </Modal>
+
+      <Modal
+        visible={showYemekTarifleri}
+        animationType="slide"
+        onRequestClose={() => setShowYemekTarifleri(false)}
+      >
+        <YemekTarifleri language={language} title={t[language].recipes} onClose={() => setShowYemekTarifleri(false)} />
+      </Modal>
+
+      <Modal
+        visible={showDovizAltin}
+        animationType="slide"
+        onRequestClose={() => setShowDovizAltin(false)}
+      >
+        <DovizAltin title={t[language].rates} onClose={() => setShowDovizAltin(false)} />
+      </Modal>
+
+      <Modal
+        visible={showAlarm}
+        animationType="slide"
+        onRequestClose={() => setShowAlarm(false)}
+      >
+        <Alarm language={language} title={t[language].alarm} onClose={() => setShowAlarm(false)} />
+      </Modal>
+
+      <Modal
+        visible={showNotes}
+        animationType="slide"
+        onRequestClose={() => setShowNotes(false)}
+      >
+        <Notlar language={language} title={t[language].notes} onClose={() => setShowNotes(false)} />
+      </Modal>
+      
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+    paddingTop: 35,
+    paddingBottom: 10,
+  },
+  headerBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    marginHorizontal: 24,
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E6E9EF',
+  },
+  headerText: {
+    fontSize: 28,
+    color: '#111827',
+    textAlign: 'center',
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  buttonGroup: {
+    paddingHorizontal: 0,
+    paddingBottom: 140,
+  },
+
+  baseButton: {
+    width: '30%',
+    aspectRatio: 1,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+
+  buttonRow: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+  },
+
+buttonText: {
+  color: '#1b1a1aff',
+  fontSize: 16,
+  fontWeight: '500',
+  textAlign: 'center',
+  marginTop: 0,
+},
+  settingsBar: {
+    position: 'absolute',
+    bottom: 120,
+    left: 0,
+    right: 0,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  settingsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  settingsHeaderText: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  languageLabel: {
+    color: '#6B7280',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  langRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  langChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: '#E5E7EB',
+    marginRight: 8,
+  },
+  langChipActive: {
+    backgroundColor: '#111827',
+  },
+  langText: {
+    color: '#111827',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  langTextActive: {
+    color: '#FFFFFF',
+  },
+  
+});
