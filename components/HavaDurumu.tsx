@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 
 interface WeatherData {
@@ -24,12 +25,27 @@ export default function HavaDurumu({ onClose, title }: { onClose: () => void; ti
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState('');
 
   useEffect(() => {
-    fetchWeather();
+    const init = async () => {
+      const savedKey = await AsyncStorage.getItem('weather_api_key');
+      let keyToUse = savedKey || '';
+      if (!keyToUse && typeof process !== 'undefined') {
+        const envKey = process.env?.EXPO_PUBLIC_WEATHER_API_KEY ?? '';
+        if (envKey) {
+          keyToUse = envKey;
+          setApiKey(envKey);
+        }
+      }
+      if (savedKey) setApiKey(savedKey);
+      fetchWeather(keyToUse);
+    };
+    init();
   }, []);
 
-  const fetchWeather = async () => {
+  const fetchWeather = async (keyOverride?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -47,8 +63,12 @@ export default function HavaDurumu({ onClose, title }: { onClose: () => void; ti
       // WeatherAPI.com - Ücretsiz ve güvenilir hava durumu API'si
       // Not: Ücretsiz tier için günlük 1 milyon istek hakkı var
       // API key almak için: https://www.weatherapi.com/signup.aspx
-      const API_KEY = 'YOUR_API_KEY'; // WeatherAPI.com'dan ücretsiz API key alın
-      const apiUrl = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${latitude},${longitude}&lang=tr`;
+      const keyToUse = (keyOverride ?? apiKey).trim();
+      if (!keyToUse) {
+        setError('API anahtarı gerekli. Lütfen aşağıdan API anahtarınızı kaydedin.');
+        return;
+      }
+      const apiUrl = `https://api.weatherapi.com/v1/current.json?key=${keyToUse}&q=${latitude},${longitude}&lang=tr`;
 
       const response = await fetch(apiUrl);
       const data = await response.json();
@@ -83,6 +103,15 @@ export default function HavaDurumu({ onClose, title }: { onClose: () => void; ti
     } finally {
       setLoading(false);
     }
+  };
+
+  const saveApiKey = async () => {
+    const trimmed = apiKeyInput.trim();
+    if (!trimmed) return;
+    await AsyncStorage.setItem('weather_api_key', trimmed);
+    setApiKey(trimmed);
+    setApiKeyInput('');
+    fetchWeather(trimmed);
   };
 
   const getWeatherIcon = (icon: string) => {
@@ -128,11 +157,23 @@ export default function HavaDurumu({ onClose, title }: { onClose: () => void; ti
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
             <Text style={styles.infoText}>
-              Not: WeatherAPI.com'dan ücretsiz API key almanız gerekiyor.{'\n'}
-              Kayıt: https://www.weatherapi.com/signup.aspx{'\n'}
-              Günlük 1 milyon ücretsiz istek hakkı var.
+              Not: WeatherAPI.com'dan ücretsiz API anahtarı (API key) alın ve aşağıya kaydedin. {'\n'}
+              Kayıt: https://www.weatherapi.com/signup.aspx {'\n'}
+              Ücretsiz pakette yeterli günlük limit bulunur.
             </Text>
-            <TouchableOpacity onPress={fetchWeather} style={styles.retryButton}>
+            <View style={styles.keyRow}>
+              <TextInput
+                style={styles.keyInput}
+                placeholder="API anahtarı"
+                value={apiKeyInput}
+                onChangeText={setApiKeyInput}
+                placeholderTextColor="#999"
+              />
+              <TouchableOpacity style={styles.keySaveButton} onPress={saveApiKey}>
+                <Text style={styles.keySaveButtonText}>Kaydet</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity onPress={() => fetchWeather()} style={styles.retryButton}>
               <Text style={styles.retryButtonText}>Tekrar Dene</Text>
             </TouchableOpacity>
           </View>
@@ -169,7 +210,7 @@ export default function HavaDurumu({ onClose, title }: { onClose: () => void; ti
               </View>
             </View>
 
-            <TouchableOpacity onPress={fetchWeather} style={styles.refreshButton}>
+            <TouchableOpacity onPress={() => fetchWeather()} style={styles.refreshButton}>
               <Text style={styles.refreshButtonText}>🔄 Yenile</Text>
             </TouchableOpacity>
           </>
@@ -236,19 +277,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 100,
-    paddingHorizontal: 20,
   },
   errorText: {
     fontSize: 18,
     color: '#E91E63',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   infoText: {
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+    marginHorizontal: 20,
+    marginBottom: 10,
+  },
+  keyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  keyInput: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#333',
+    marginRight: 10,
+  },
+  keySaveButton: {
+    backgroundColor: '#8BC34A',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  keySaveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   retryButton: {
     backgroundColor: '#8BC34A',
@@ -336,4 +404,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

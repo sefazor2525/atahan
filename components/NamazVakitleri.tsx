@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   locationText: {
-    fontSize: 18,
+    fontSize: 13,
     color: '#333',
     fontWeight: '600',
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   nextPrayerLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
     marginBottom: 5,

@@ -19,6 +19,7 @@ export default function App() {
   const [showDovizAltin, setShowDovizAltin] = useState(false);
   const [showAlarm, setShowAlarm] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [language, setLanguage] = useState<'tr' | 'en' | 'ar'>('tr');
 
   const t = {
@@ -68,6 +69,7 @@ export default function App() {
     { key: 'rates', label: t[language].rates, color: '#FF9800', onPress: () => setShowDovizAltin(true) },
     { key: 'alarm', label: t[language].alarm, color: '#E91E63', onPress: () => setShowAlarm(true) },
     { key: 'notes', label: t[language].notes, color: '#607D8B', onPress: () => setShowNotes(true) },
+    { key: 'settings', label: t[language].settings, color: '#9C27B0', onPress: () => setShowSettings(true) },
   ];
 
 
@@ -98,32 +100,7 @@ export default function App() {
 
       <StatusBar style="auto" />
 
-      <View style={styles.settingsBar}>
-        <View style={styles.settingsHeaderRow}>
-          <Text style={styles.settingsHeaderText}>{t[language].settings}</Text>
-          <Text style={styles.languageLabel}>{t[language].language}</Text>
-        </View>
-        <View style={styles.langRow}>
-          <TouchableOpacity
-            style={[styles.langChip, language === 'tr' && styles.langChipActive]}
-            onPress={() => setLanguage('tr')}
-          >
-            <Text style={[styles.langText, language === 'tr' && styles.langTextActive]}>TR</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.langChip, language === 'en' && styles.langChipActive]}
-            onPress={() => setLanguage('en')}
-          >
-            <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.langChip, language === 'ar' && styles.langChipActive]}
-            onPress={() => setLanguage('ar')}
-          >
-            <Text style={[styles.langText, language === 'ar' && styles.langTextActive]}>AR</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      
 
       {/* Modals */}
       <Modal
@@ -180,6 +157,44 @@ export default function App() {
         onRequestClose={() => setShowNotes(false)}
       >
         <Notlar language={language} title={t[language].notes} onClose={() => setShowNotes(false)} />
+      </Modal>
+
+      <Modal
+        visible={showSettings}
+        animationType="slide"
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <View style={styles.settingsModalContainer}>
+          <View style={styles.settingsModalHeader}>
+            <Text style={styles.settingsModalTitle}>{t[language].settings}</Text>
+            <TouchableOpacity onPress={() => setShowSettings(false)} style={styles.settingsCloseButton}>
+              <Text style={styles.settingsCloseButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.settingsModalContent}>
+            <Text style={styles.languageLabel}>{t[language].language}</Text>
+            <View style={styles.langColumn}>
+              <TouchableOpacity
+                style={[styles.langChip, language === 'tr' && styles.langChipActive]}
+                onPress={() => setLanguage('tr')}
+              >
+                <Text style={[styles.langText, language === 'tr' && styles.langTextActive]}>TR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.langChip, language === 'en' && styles.langChipActive]}
+                onPress={() => setLanguage('en')}
+              >
+                <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.langChip, language === 'ar' && styles.langChipActive]}
+                onPress={() => setLanguage('ar')}
+              >
+                <Text style={[styles.langText, language === 'ar' && styles.langTextActive]}>AR</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
       
     </View>
@@ -273,17 +288,21 @@ buttonText: {
     color: '#6B7280',
     fontSize: 12,
     fontWeight: '600',
+    marginTop: 4,
+    marginBottom: 8,
   },
   langRow: {
     flexDirection: 'row',
-    gap: 8,
+  },
+  langColumn: {
+    flexDirection: 'column',
   },
   langChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
     backgroundColor: '#E5E7EB',
-    marginRight: 8,
+    marginBottom: 8,
   },
   langChipActive: {
     backgroundColor: '#111827',
@@ -295,6 +314,40 @@ buttonText: {
   },
   langTextActive: {
     color: '#FFFFFF',
+  },
+  settingsModalContainer: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
+  settingsModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#9C27B0',
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  settingsModalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  settingsCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsCloseButtonText: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  settingsModalContent: {
+    padding: 20,
   },
   
 });
