@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, TextInput, Linking } from 'react-native';
 
 interface Recipe {
   title: string;
@@ -311,6 +311,17 @@ export default function YemekTarifleri({ onClose, title, language = 'tr' }: { on
 
       {!selectedRecipe ? (
         <>
+          <View style={styles.linksRow}>
+            <TouchableOpacity style={styles.linkChip} onPress={() => Linking.openURL('https://www.yemek.com/') }>
+              <Text style={styles.linkText}>Yemek.com</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.linkChip} onPress={() => Linking.openURL('https://www.nefisyemektarifleri.com/') }>
+              <Text style={styles.linkText}>Nefis Yemek Tarifleri .Com</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.linkChip} onPress={() => Linking.openURL('https://www.lezzet.com.tr/') }>
+              <Text style={styles.linkText}>Lezzet.Com.Tr</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.searchContainer}>
             <TextInput
               style={styles.searchInput}
@@ -471,6 +482,25 @@ const styles = StyleSheet.create({
   recipesList: {
     flex: 1,
     padding: 15,
+  },
+  linksRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+  linkChip: {
+    backgroundColor: '#03A9F4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  linkText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   recipeCard: {
     backgroundColor: '#FFFFFF',
@@ -712,4 +742,3 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 });
-

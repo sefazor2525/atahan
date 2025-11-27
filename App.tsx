@@ -1,7 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
  
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NamazVakitleri from './components/NamazVakitleri';
 import HesapMakinesi from './components/HesapMakinesi';
 import HavaDurumu from './components/HavaDurumu';
@@ -21,6 +23,42 @@ export default function App() {
   const [showNotes, setShowNotes] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [language, setLanguage] = useState<'tr' | 'en' | 'ar'>('tr');
+  const [pendingLanguage, setPendingLanguage] = useState<'tr' | 'en' | 'ar'>(language);
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  useEffect(() => {
+    const init = async () => {
+      const savedLang = await AsyncStorage.getItem('app_language');
+      if (savedLang === 'tr' || savedLang === 'en' || savedLang === 'ar') {
+        setLanguage(savedLang);
+        setPendingLanguage(savedLang);
+      }
+      const savedAvatar = await AsyncStorage.getItem('profile_avatar');
+      if (savedAvatar) setAvatarUri(savedAvatar);
+    };
+    init();
+  }, []);
+
+  const pickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      const uri = result.assets[0].uri;
+      setAvatarUri(uri);
+      await AsyncStorage.setItem('profile_avatar', uri);
+    }
+  };
+
+  const saveLanguage = async () => {
+    setLanguage(pendingLanguage);
+    await AsyncStorage.setItem('app_language', pendingLanguage);
+    setShowSettings(false);
+  };
 
   const t = {
     tr: {
@@ -34,6 +72,7 @@ export default function App() {
       notes: 'Notlar',
       settings: 'Ayarlar',
       language: 'Dil',
+      save: 'Kaydet',
     },
     en: {
       welcome: 'Welcome to Personal Assistant!',
@@ -46,6 +85,7 @@ export default function App() {
       notes: 'Notes',
       settings: 'Settings',
       language: 'Language',
+      save: 'Save',
     },
     ar: {
       welcome: 'مرحبًا بك في المساعد الشخصي!',
@@ -58,18 +98,21 @@ export default function App() {
       notes: 'ملاحظات',
       settings: 'الإعدادات',
       language: 'اللغة',
+      save: 'حفظ',
     },
   };
 
+  const withAlpha = (hex: string, aa: string = '99') => (hex?.startsWith('#') ? `${hex}${aa}` : hex);
+
   const features = [
-    { key: 'prayers', label: t[language].prayers, color: '#4CAF50', onPress: () => setShowNamazVakitleri(true) },
-    { key: 'calc', label: t[language].calc, color: '#00BCD4', onPress: () => setShowHesapMakinesi(true) },
-    { key: 'weather', label: t[language].weather, color: '#8BC34A', onPress: () => setShowHavaDurumu(true) },
-    { key: 'recipes', label: t[language].recipes, color: '#03A9F4', onPress: () => setShowYemekTarifleri(true) },
-    { key: 'rates', label: t[language].rates, color: '#FF9800', onPress: () => setShowDovizAltin(true) },
-    { key: 'alarm', label: t[language].alarm, color: '#E91E63', onPress: () => setShowAlarm(true) },
-    { key: 'notes', label: t[language].notes, color: '#607D8B', onPress: () => setShowNotes(true) },
-    { key: 'settings', label: t[language].settings, color: '#9C27B0', onPress: () => setShowSettings(true) },
+    { key: 'prayers', icon: '🕌', label: t[language].prayers, color: '#4CAF50', onPress: () => setShowNamazVakitleri(true) },
+    { key: 'calc', icon: '🧮', label: t[language].calc, color: '#00BCD4', onPress: () => setShowHesapMakinesi(true) },
+    { key: 'weather', icon: '🌦️', label: t[language].weather, color: '#8BC34A', onPress: () => setShowHavaDurumu(true) },
+    { key: 'recipes', icon: '🍽️', label: t[language].recipes, color: '#03A9F4', onPress: () => setShowYemekTarifleri(true) },
+    { key: 'rates', icon: '💱', label: t[language].rates, color: '#FF9800', onPress: () => setShowDovizAltin(true) },
+    { key: 'alarm', icon: '⏰', label: t[language].alarm, color: '#E91E63', onPress: () => setShowAlarm(true) },
+    { key: 'notes', icon: '📝', label: t[language].notes, color: '#607D8B', onPress: () => setShowNotes(true) },
+    { key: 'settings', icon: '⚙️', label: t[language].settings, color: '#9C27B0', onPress: () => setShowSettings(true) },
   ];
 
 
@@ -78,6 +121,15 @@ export default function App() {
       {/* 🔹 Üstteki karşılama kutusu */}
       <View style={styles.headerBox}>
         <Text style={styles.headerText}>{t[language].welcome}</Text>
+        <TouchableOpacity onPress={pickAvatar} style={styles.avatarButton} activeOpacity={0.9}>
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarEmoji}>👤</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* 🔻 Butonlar grubu */}
@@ -89,11 +141,11 @@ export default function App() {
         columnWrapperStyle={styles.buttonRow}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[styles.baseButton, { backgroundColor: item.color }]}
+            style={[styles.baseButton, { backgroundColor: withAlpha(item.color) }]}
             onPress={item.onPress}
             activeOpacity={0.85}
           >
-            <Text style={styles.buttonText}>{item.label}</Text>
+            <Text style={styles.buttonIcon}>{item.icon}</Text>
           </TouchableOpacity>
         )}
       />
@@ -175,24 +227,27 @@ export default function App() {
             <Text style={styles.languageLabel}>{t[language].language}</Text>
             <View style={styles.langColumn}>
               <TouchableOpacity
-                style={[styles.langChip, language === 'tr' && styles.langChipActive]}
-                onPress={() => setLanguage('tr')}
+                style={[styles.langChip, pendingLanguage === 'tr' && styles.langChipActive]}
+                onPress={() => setPendingLanguage('tr')}
               >
-                <Text style={[styles.langText, language === 'tr' && styles.langTextActive]}>TR</Text>
+                <Text style={[styles.langText, pendingLanguage === 'tr' && styles.langTextActive]}>TR</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.langChip, language === 'en' && styles.langChipActive]}
-                onPress={() => setLanguage('en')}
+                style={[styles.langChip, pendingLanguage === 'en' && styles.langChipActive]}
+                onPress={() => setPendingLanguage('en')}
               >
-                <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
+                <Text style={[styles.langText, pendingLanguage === 'en' && styles.langTextActive]}>EN</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.langChip, language === 'ar' && styles.langChipActive]}
-                onPress={() => setLanguage('ar')}
+                style={[styles.langChip, pendingLanguage === 'ar' && styles.langChipActive]}
+                onPress={() => setPendingLanguage('ar')}
               >
-                <Text style={[styles.langText, language === 'ar' && styles.langTextActive]}>AR</Text>
+                <Text style={[styles.langText, pendingLanguage === 'ar' && styles.langTextActive]}>AR</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity onPress={saveLanguage} style={styles.saveLangButton}>
+              <Text style={styles.saveLangButtonText}>{t[language].save}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -210,7 +265,7 @@ const styles = StyleSheet.create({
   },
   headerBox: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     marginHorizontal: 24,
@@ -226,11 +281,32 @@ const styles = StyleSheet.create({
     borderColor: '#E6E9EF',
   },
   headerText: {
-    fontSize: 28,
+    fontSize: 22,
     color: '#111827',
     textAlign: 'center',
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  avatarButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E6E9EF',
+    backgroundColor: '#F3F4F6',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarEmoji: {
+    fontSize: 24,
   },
   buttonGroup: {
     paddingHorizontal: 0,
@@ -257,11 +333,16 @@ const styles = StyleSheet.create({
   },
 
 buttonText: {
-  color: '#1b1a1aff',
-  fontSize: 16,
-  fontWeight: '500',
+  color: '#FFFFFF',
+  fontSize: 0,
+  fontWeight: '600',
   textAlign: 'center',
   marginTop: 0,
+},
+buttonIcon: {
+  fontSize: 40,
+  textAlign: 'center',
+  marginBottom: 0,
 },
   settingsBar: {
     position: 'absolute',
@@ -348,6 +429,19 @@ buttonText: {
   },
   settingsModalContent: {
     padding: 20,
+  },
+  saveLangButton: {
+    marginTop: 12,
+    backgroundColor: '#9C27B0',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  saveLangButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   
 });
